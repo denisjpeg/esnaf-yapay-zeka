@@ -4,7 +4,7 @@ import pandas as pd
 import base64
 
 # 1. SAYFA AYARLARI (Geniş Ekran Modu)
-st.set_page_config(page_title="Deniz GPT 2.1", page_icon="🏗️", layout="wide")
+st.set_page_config(page_title="N-Tech Analytics", page_icon="🏗️", layout="wide")
 
 # 2. SAĞLI SOLLU SOHBET VE SABİT INPUT İÇİN GELİŞMİŞ CSS
 st.markdown("""
@@ -99,7 +99,7 @@ def check_password():
         _, col_mid, _ = st.columns([1, 2, 1])
         with col_mid:
             st.markdown('<div class="password-container">', unsafe_allow_html=True)
-            st.markdown("### 🏗️ Deniz GPT | Güvenli Giriş")
+            st.markdown("### 🏗️ N-Tech Analytics | Güvenli Giriş")
             password = st.text_input("Analiz paneli şifresini girin:", type="password")
             if st.button("Giriş Yap", use_container_width=True):
                 if password == st.secrets["APP_PASSWORD"]:
@@ -133,7 +133,7 @@ if check_password():
     # Üst Bölüm Sabit Alanı (Başlıklar ve Butonlar)
     _, header_col, _ = st.columns([1, 4, 1])
     with header_col:
-        st.markdown("<h1>🏗️ Deniz GPT 2.1</h1>", unsafe_allow_html=True)
+        st.markdown("<h1> 🏗️ N-Tech Analytics </h1>", unsafe_allow_html=True)
         st.write("<p style='text-align: center;'>Analiz paneline hoş geldiniz. Dosyalarınızı yükleyip hızlı butonlarla veya yazarak analiz yapabilirsiniz.</p>", unsafe_allow_html=True)
 
         # HIZLI ANALİZ SORU BUTONLARI
