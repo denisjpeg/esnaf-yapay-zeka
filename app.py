@@ -16,11 +16,11 @@ def load_lottie_url(url: str):
         return None
     return r.json()
 
-# Premium Lottie Animasyon Linkleri (Açık Temaya Uygun Canlı Tonlar)
-lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json") # Giriş kilit animasyonu
-lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json") # Analiz küpü animasyonu
+# Premium Lottie Animasyon Linkleri
+lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json")
+lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json")
 
-# 2. AÇIK RENK TEMA İÇİN GELİŞMİŞ CSS (Arka plan açık, yazılar koyu)
+# 2. AÇIK RENK TEMA İÇİN GELİŞMİŞ CSS (Hata Düzeltildi)
 st.markdown("""
     <style>
     /* Ana Arka Planı Bembeyaz Yap ve Yazıları Koyu Füme Yap */
@@ -43,7 +43,7 @@ st.markdown("""
         color: #1E293B !important;
     }
     
-    /* Kullanıcı Mesajı Ayrımı (Hafif Mavi tonlu açık arka plan) */
+    /* Kullanıcı Mesajı Ayrımı */
     [data-testid="stChatMessage"]:nth-child(even) {
         background-color: #E2E8F0 !important;
     }
@@ -89,7 +89,7 @@ st.markdown("""
         color: #0F172A !important;
     }
     </style>
-""", unsafe_index=True)
+""", unsafe_allow_html=True)  # <-- Kritik düzeltme burada yapıldı
 
 # 3. GİRİŞ KONTROLÜ (ŞİFRE KORUMASI)
 if "authenticated" not in st.session_state:
@@ -104,7 +104,7 @@ if not st.session_state["authenticated"]:
         st.markdown("<p style='text-align: center;'>Güvenli giriş için lütfen şifrenizi giriniz.</p>", unsafe_allow_html=True)
         
         password = st.text_input("Şifre", type="password", label_visibility="collapsed")
-        if password == "ntech2026":  # Şifreniz
+        if password == "ntech2026":  # Giriş şifreniz
             st.session_state["authenticated"] = True
             st.rerun()
         elif password != "":
@@ -120,7 +120,7 @@ if "client" not in st.session_state:
 # 5. ANA PANEL VE ARAYÜZ
 st.markdown("<h1 style='text-align: center; margin-bottom: 20px;'>🏗️ N-Tech Analytics Kontrol Paneli</h1>", unsafe_allow_html=True)
 
-# SAĞLI SOLLU DÜZEN (Sol: Ayarlar ve Dosyalar | Sağ: Chatbot)
+# SAĞLI SOLLU DÜZEN
 sidebar_col, chat_col = st.columns([1, 2], gap="large")
 
 with sidebar_col:
@@ -136,7 +136,6 @@ with sidebar_col:
     if st.button("📈 Aylık Ciro Analizi Yap"):
         with chat_col:
             st.info("Aylık ciro analizi hazırlanıyor...")
-            # Buraya arka plan analiz kodu gelebilir
             
     if st.button("🚛 Araç Doluluk / Lojistik Raporu"):
         with chat_col:
@@ -145,18 +144,15 @@ with sidebar_col:
 with chat_col:
     st.markdown("### 💬 Yapay Zeka Danışmanı")
     
-    # Eski mesajları ekrana bas
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
             
-    # Kullanıcıdan yeni giriş alma
     if user_input := st.chat_input("İşletmeniz hakkında bir soru sorun veya analiz isteyin..."):
         with st.chat_message("user"):
             st.write(user_input)
         st.session_state.messages.append({"role": "user", "content": user_input})
         
-        # Yapay zekanın cevap üretme simülasyonu
         with st.chat_message("assistant"):
             with st.spinner("N-Tech AI düşünüyor..."):
                 try:
