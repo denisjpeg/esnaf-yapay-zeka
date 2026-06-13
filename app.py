@@ -3,7 +3,7 @@ import openai
 import pandas as pd
 import base64
 import requests
-from streamlit_lottie import st_lottie  # Yeni eklediğimiz premium animasyon kütüphanesi
+from streamlit_lottie import st_lottie
 
 # 1. SAYFA AYARLARI (Geniş Ekran Modu)
 st.set_page_config(page_title="N-Tech Analytics", page_icon="🏗️", layout="wide")
@@ -16,219 +16,156 @@ def load_lottie_url(url: str):
         return None
     return r.json()
 
-# Premium Lottie Animasyon Linkleri (Teal / Cyber Mavi Tonlarında)
-lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json") # Giriş için siber kilit
-lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json") # Analiz için veri küpü
+# Premium Lottie Animasyon Linkleri (Açık Temaya Uygun Canlı Tonlar)
+lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json") # Giriş kilit animasyonu
+lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json") # Analiz küpü animasyonu
 
-# 2. SAĞLI SOLLU SOHBET VE SABİT INPUT İÇİN GELİŞMİŞ CSS
+# 2. AÇIK RENK TEMA İÇİN GELİŞMİŞ CSS (Arka plan açık, yazılar koyu)
 st.markdown("""
     <style>
-    /* Ana Arka Plan */
+    /* Ana Arka Planı Bembeyaz Yap ve Yazıları Koyu Füme Yap */
     .stApp {
-        background-color: #071014;
-        color: #e2e8f0;
+        background-color: #FFFFFF !important;
+        color: #1E293B !important;
     }
     
-    /* Başlıklar */
-    h1, h2, h3 {
-        color: #B8F2E6 !important;
-        font-family: 'Poppins', sans-serif;
-        text-align: center;
+    /* Üst Menü ve Sidebar Alanlarını Düzenle */
+    header, [data-testid="stHeader"] {
+        background-color: #F8FAFC !important;
     }
-
-    /* KUTULARI SIFIRLAMA & GENEL CHAT AYARI */
-    .stChatMessage {
-        background-color: transparent !important;
-        border: none !important;
-        padding: 10px 0px !important;
-        margin-bottom: 5px !important;
-        display: flex !important;
-        width: 100% !important;
+    
+    /* Sohbet Mesaj Alanları ve Kutuları */
+    [data-testid="stChatMessage"] {
+        background-color: #F1F5F9 !important;
+        border-radius: 15px !important;
+        padding: 15px !important;
+        margin-bottom: 10px !important;
+        color: #1E293B !important;
     }
-
-    /* KULLANICI MESAJLARINI SAĞA YASLAMA */
-    .stChatMessage[data-testid="stChatMessageUser"] {
-        flex-direction: row-reverse !important;
-        text-align: right !important;
+    
+    /* Kullanıcı Mesajı Ayrımı (Hafif Mavi tonlu açık arka plan) */
+    [data-testid="stChatMessage"]:nth-child(even) {
+        background-color: #E2E8F0 !important;
     }
-
-    /* Kullanıcı Mesaj Metninin Arkasını Hafifçe Belirgin Yapma */
-    .stChatMessage[data-testid="stChatMessageUser"] .stMarkdown {
-        background-color: rgba(28, 107, 106, 0.15) !important;
-        padding: 10px 15px !important;
-        border-radius: 15px 15px 0px 15px !important;
-        display: inline-block !important;
+    
+    /* Başlıklar ve Yazı Etiketleri */
+    h1, h2, h3, h4, h5, h6, p, span, label {
+        color: #0F172A !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    /* ASİSTAN MESAJLARINI SOLDA TUTMA VE YUMUŞATMA */
-    .stChatMessage[data-testid="stChatMessageAssistant"] .stMarkdown {
-        background-color: rgba(255, 255, 255, 0.02) !important;
-        padding: 10px 15px !important;
-        border-radius: 15px 15px 15px 0px !important;
-        display: inline-block !important;
+    
+    /* Input Kutuları ve Şifre Alanı */
+    .stTextInput input {
+        background-color: #F8FAFC !important;
+        color: #0F172A !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
     }
-
-    /* Soft Geçiş Çizgisi */
-    .stChatMessage {
-        border-bottom: 1px solid rgba(184, 242, 230, 0.03) !important;
-    }
-
-    /* Giriş Şifresi Kutusu Tasarımı */
-    .password-container {
-        max-width: 400px;
-        margin: 30px auto;
-        padding: 40px;
-        background-color: rgba(28, 107, 106, 0.03);
-        border-radius: 15px;
-        border: 1px solid rgba(184, 242, 230, 0.08);
-    }
-
-    /* Premium Butonlar */
+    
+    /* Hızlı Analiz Butonları Tasarımı */
     .stButton>button {
-        background-color: rgba(28, 107, 106, 0.2);
-        color: #B8F2E6;
-        border: 1px solid #1c6b6a;
-        border-radius: 20px;
-        transition: 0.3s;
+        background-color: #2563EB !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        font-weight: bold !important;
+        transition: all 0.3s ease;
     }
     .stButton>button:hover {
-        background-color: #1c6b6a;
-        color: white;
-        border-color: #B8F2E6;
+        background-color: #1D4ED8 !important;
+        transform: scale(1.02);
     }
     
-    .block-container {
-        padding-bottom: 150px !important;
+    /* Alt Kısımdaki Sabit Chat Input Çubuğu */
+    [data-testid="stChatInput"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 20px !important;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.05) !important;
+    }
+    
+    [data-testid="stChatInput"] textarea {
+        color: #0F172A !important;
     }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_index=True)
 
-# 3. ŞİFRE KONTROLÜ (GÜVENLİK DUVARI + GİRİŞ ANİMASYONU)
-def check_password():
-    if "password_correct" not in st.session_state:
-        st.session_state.password_correct = False
+# 3. GİRİŞ KONTROLÜ (ŞİFRE KORUMASI)
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
 
-    if not st.session_state.password_correct:
-        _, col_mid, _ = st.columns([1, 2, 1])
-        with col_mid:
-            # Giriş ekranının üstüne premium siber güvenlik animasyonunu yerleştiriyoruz
-            if lottie_lock:
-                st_lottie(lottie_lock, height=200, key="lock_animation")
-                
-            st.markdown('<div class="password-container">', unsafe_allow_html=True)
-            st.markdown("### 🏗️ N-Tech Analytics")
-            password = st.text_input("Analiz paneli şifresini girin:", type="password")
-            if st.button("Sistem Girişi", use_container_width=True):
-                if password == st.secrets["APP_PASSWORD"]:
-                    st.session_state.password_correct = True
-                    st.rerun()
-                else:
-                    st.error("❌ Hatalı şifre!")
-            st.markdown('</div>', unsafe_allow_html=True)
-        return False
-    return True
-
-if check_password():
-    # 4. API İSTEMCİSİ
-    client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-    # 5. SOHBET HAFIZASI
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "pending_query" not in st.session_state:
-        st.session_state.pending_query = None
-
-    # Sol taraftaki gizlenebilir Çekmece Menüsü
-    with st.sidebar:
-        st.markdown("### ⚙️ Yönetim Paneli")
-        st.write("Uygulama ayarlarını buradan değiştirebilirsiniz.")
-        if st.button("🗑️ Sohbeti Sıfırla", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.password_correct = False
-            st.rerun()
-
-    # Ana Sayfa Düzeni
-    _, header_col, _ = st.columns([1, 4, 1])
-    with header_col:
-        st.markdown("<h1>🏗️ N-Tech Analytics 2.1</h1>", unsafe_allow_html=True)
-        st.write("<p style='text-align: center;'>Gelecek Nesil Endüstriyel Veri Analiz Platformu.</p>", unsafe_allow_html=True)
-
-        # HIZLI ANALİZ SORU BUTONLARI
-        st.write("🔍 **Hızlı Analiz Soruları:**")
-        b_col1, b_col2, b_col3 = st.columns(3)
+if not st.session_state["authenticated"]:
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if lottie_lock:
+            st_lottie(lottie_lock, height=200, key="lock")
+        st.markdown("<h2 style='text-align: center;'>N-Tech Analytics</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;'>Güvenli giriş için lütfen şifrenizi giriniz.</p>", unsafe_allow_html=True)
         
-        quick_questions = [
-            "📊 Bu ayın toplam hakediş dökümünü çıkar.",
-            "🛢️ Giderleri (Yakıt, Bakım, Personel) analiz et.",
-            "📍 En karlı çalıştığımız bölgeleri listele."
-        ]
-
-        with b_col1:
-            if st.button("💰 Hakediş Özeti", use_container_width=True):
-                st.session_state.pending_query = quick_questions[0]
-        with b_col2:
-            if st.button("📉 Gider Analizi", use_container_width=True):
-                st.session_state.pending_query = quick_questions[1]
-        with b_col3:
-            if st.button("🌍 Bölge Analizi", use_container_width=True):
-                st.session_state.pending_query = quick_questions[2]
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # SOHBET AKIŞINI GÖSTERME (Sağlı Söllü Düzen)
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"]):
-                st.write(msg["content"])
-
-    # 6. EN ALTA SABİTLENMİŞ INPUT ALANI
-    chat_data = st.chat_input("Mesajınızı yazın veya dosyanızı ekleyin...", accept_file=True, file_type=["xlsx", "xls", "png", "jpg", "jpeg"])
-
-    if chat_data or st.session_state.pending_query:
-        user_text = st.session_state.pending_query if st.session_state.pending_query else chat_data["text"]
-        uploaded_files = chat_data["files"] if chat_data else []
-        st.session_state.pending_query = None
-
-        # Mesajı hafızaya ekle
-        st.session_state.messages.append({"role": "user", "content": user_text if user_text else "Dosya yüklendi."})
-
-        content_list = []
-        if user_text:
-            content_list.append({"type": "text", "text": user_text})
-
-        for file in uploaded_files:
-            if file.name.endswith(('.xlsx', '.xls')):
-                df = pd.read_excel(file)
-                with header_col:
-                    st.write(f"📁 **Yüklenen Dosya:** {file.name}")
-                    st.dataframe(df.head(), use_container_width=True)
-                content_list.append({"type": "text", "text": f"Dosya Adı: {file.name}\nİçerik:\n{df.to_markdown(index=False)}"})
-            elif file.name.endswith(('.png', '.jpg', '.jpeg')):
-                img_str = base64.b64encode(file.getvalue()).decode("utf-8")
-                content_list.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_str}"}})
-
-        # PREMİUM ANİMASYONLU CEVAP SÜRECİ
-        try:
-            system_prompt = (
-                "Sen N-Tech Analytics'in profesyonel iş analistisin. Verileri titizlikle analiz et. "
-                "Üslubun kibar, net ve profesyonel olsun. Teknik terimleri esnafın anlayacağı şekilde açıkla."
-            )
-            
-            api_messages = [{"role": "system", "content": system_prompt}]
-            for m in st.session_state.messages[:-1]:
-                api_messages.append({"role": m["role"], "content": m["content"]})
-            api_messages.append({"role": "user", "content": content_list})
-
-            # Yapay zeka düşünürken o eski statik yazı yerine dönen neon küp animasyonunu tetikliyoruz
-            with header_col:
-                with st.spinner(""):
-                    if lottie_loading:
-                        st_lottie(lottie_loading, height=120, key="loading_animation")
-
-                    response = client.chat.completions.create(model="gpt-4o", messages=api_messages)
-                    ai_reply = response.choices[0].message.content
-                    st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-            
+        password = st.text_input("Şifre", type="password", label_visibility="collapsed")
+        if password == "ntech2026":  # Şifreniz
+            st.session_state["authenticated"] = True
             st.rerun()
-        except Exception as e:
-            with header_col:
-                st.error(f"Bir hata oluştu: {str(e)}")
+        elif password != "":
+            st.error("Hatalı şifre girdiniz!")
+    st.stop()
+
+# 4. DEPOLAMA ALANLARINI BAŞLATMA (SESSION STATE)
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "client" not in st.session_state:
+    st.session_state.client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+# 5. ANA PANEL VE ARAYÜZ
+st.markdown("<h1 style='text-align: center; margin-bottom: 20px;'>🏗️ N-Tech Analytics Kontrol Paneli</h1>", unsafe_allow_html=True)
+
+# SAĞLI SOLLU DÜZEN (Sol: Ayarlar ve Dosyalar | Sağ: Chatbot)
+sidebar_col, chat_col = st.columns([1, 2], gap="large")
+
+with sidebar_col:
+    st.markdown("### 📊 Veri ve Dosya Yükleme")
+    uploaded_file = st.file_uploader("Excel veya Görsel Dosyası Yükleyin", type=["xlsx", "xls", "png", "jpg", "jpeg"])
+    
+    if uploaded_file:
+        st.success(f"📁 {uploaded_file.name} başarıyla sisteme yüklendi.")
+    
+    st.markdown("---")
+    st.markdown("### ⚡ Hızlı Analiz Butonları")
+    
+    if st.button("📈 Aylık Ciro Analizi Yap"):
+        with chat_col:
+            st.info("Aylık ciro analizi hazırlanıyor...")
+            # Buraya arka plan analiz kodu gelebilir
+            
+    if st.button("🚛 Araç Doluluk / Lojistik Raporu"):
+        with chat_col:
+            st.info("Lojistik ve vinç doluluk verileri işleniyor...")
+
+with chat_col:
+    st.markdown("### 💬 Yapay Zeka Danışmanı")
+    
+    # Eski mesajları ekrana bas
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
+            
+    # Kullanıcıdan yeni giriş alma
+    if user_input := st.chat_input("İşletmeniz hakkında bir soru sorun veya analiz isteyin..."):
+        with st.chat_message("user"):
+            st.write(user_input)
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        
+        # Yapay zekanın cevap üretme simülasyonu
+        with st.chat_message("assistant"):
+            with st.spinner("N-Tech AI düşünüyor..."):
+                try:
+                    response = st.session_state.client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "system", "content": "Sen endüstriyel vinç kiralama ve ağır sanayi lojistiği alanında uzman bir SaaS yapay zeka analistisin. İsmin N-Tech Analytics."}, *st.session_state.messages]
+                    )
+                    answer = response.choices[0].message.content
+                    st.write(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                except Exception as e:
+                    st.error(f"Bir hata oluştu: {e}")
