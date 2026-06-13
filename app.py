@@ -20,7 +20,7 @@ def load_lottie_url(url: str):
 lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json")
 lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json")
 
-# 2. AÇIK RENK TEMA İÇİN GELİŞMİŞ CSS (Hata Düzeltildi)
+# 2. AÇIK RENK TEMA İÇİN GELİŞMİŞ CSS
 st.markdown("""
     <style>
     /* Ana Arka Planı Bembeyaz Yap ve Yazıları Koyu Füme Yap */
@@ -89,13 +89,16 @@ st.markdown("""
         color: #0F172A !important;
     }
     </style>
-""", unsafe_allow_html=True)  # <-- Kritik düzeltme burada yapıldı
+""", unsafe_allow_html=True)
 
-# 3. GİRİŞ KONTROLÜ (ŞİFRE KORUMASI)
+# 3. GİRİŞ KONTROLÜ (DÖNGÜSÜ DÜZELTİLMİŞ ŞİFRE KORUMASI)
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
-if not st.session_state["authenticated"]:
+def check_password():
+    if st.session_state["authenticated"]:
+        return True
+
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if lottie_lock:
@@ -104,11 +107,17 @@ if not st.session_state["authenticated"]:
         st.markdown("<p style='text-align: center;'>Güvenli giriş için lütfen şifrenizi giriniz.</p>", unsafe_allow_html=True)
         
         password = st.text_input("Şifre", type="password", label_visibility="collapsed")
-        if password == "ntech2026":  # Giriş şifreniz
-            st.session_state["authenticated"] = True
-            st.rerun()
-        elif password != "":
-            st.error("Hatalı şifre girdiniz!")
+        if st.button("Sistem Girişi", use_container_width=True):
+            # Şifreyi Streamlit Secrets'taki APP_PASSWORD alanından doğrular
+            if password == st.secrets["APP_PASSWORD"]:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("❌ Hatalı şifre girdiniz!")
+    return False
+
+# Eğer şifre doğru girilmediyse kodun kalanını çalıştırma, burada durdur
+if not check_password():
     st.stop()
 
 # 4. DEPOLAMA ALANLARINI BAŞLATMA (SESSION STATE)
@@ -133,13 +142,13 @@ with sidebar_col:
     st.markdown("---")
     st.markdown("### ⚡ Hızlı Analiz Butonları")
     
-    if st.button("📈 Aylık Ciro Analizi Yap"):
-        with chat_col:
-            st.info("Aylık ciro analizi hazırlanıyor...")
+    if st.button("📈 Aylık Ciro Analizi Yap", use_container_width=True):
+        st.session_state.messages.append({"role": "user", "content": "Aylık ciro analizi yap."})
+        st.rerun()
             
-    if st.button("🚛 Araç Doluluk / Lojistik Raporu"):
-        with chat_col:
-            st.info("Lojistik ve vinç doluluk verileri işleniyor...")
+    if st.button("🚛 Araç Doluluk / Lojistik Raporu", use_container_width=True):
+        st.session_state.messages.append({"role": "user", "content": "Araç doluluk ve lojistik raporunu çıkar."})
+        st.rerun()
 
 with chat_col:
     st.markdown("### 💬 Yapay Zeka Danışmanı")
@@ -154,11 +163,13 @@ with chat_col:
         st.session_state.messages.append({"role": "user", "content": user_input})
         
         with st.chat_message("assistant"):
-            with st.spinner("N-Tech AI düşünüyor..."):
+            with st.spinner(""):
+                if lottie_loading:
+                    st_lottie(lottie_loading, height=80, key="loading")
                 try:
                     response = st.session_state.client.chat.completions.create(
                         model="gpt-4o-mini",
-                        messages=[{"role": "system", "content": "Sen endüstriyel vinç kiralama ve ağır sanayi lojistiği alanında uzman bir SaaS yapay zeka analistisin. İsmin N-Tech Analytics."}, *st.session_state.messages]
+                        messages=[{"role": "system", "content": "Sen endüstriyel vinç kiralama ve ağır sanayi lojistiği alanında uzman bir SaaS yapay zeka analistisin. İsmin N-Tech Analytics. Profesyonel, kibar ve net cevaplar ver."}, *st.session_state.messages]
                     )
                     answer = response.choices[0].message.content
                     st.write(answer)
