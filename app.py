@@ -20,7 +20,7 @@ def load_lottie_url(url: str):
 lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json")
 lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json")
 
-# 2. AÇIK RENK TEMA İÇİN GELİŞMİŞ CSS
+# 2. ULTRA DETAYLI AÇIK TEMA CSS (Siyah Kutuları Beyaz Yapan Kesin Çözüm)
 st.markdown("""
     <style>
     /* Ana Arka Planı Bembeyaz Yap ve Yazıları Koyu Füme Yap */
@@ -77,21 +77,37 @@ st.markdown("""
         transform: scale(1.02);
     }
     
-    /* Alt Kısımdaki Sabit Chat Input Çubuğu */
+    /* --- SİYAH KALAN CHAT INPUT KUTUSUNU TAMAMEN BEYAZ YAPMA --- */
     [data-testid="stChatInput"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
+        background-color: #F8FAFC !important;
+        border: 2px solid #CBD5E1 !important;
         border-radius: 20px !important;
-        box-shadow: 0 -4px 12px rgba(0,0,0,0.05) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
     }
     
+    /* Chat Input İçindeki Metin Alanını ve Yazılan Siyah Yazıyı Zorlama */
     [data-testid="stChatInput"] textarea {
+        background-color: transparent !important;
         color: #0F172A !important;
+        font-size: 16px !important;
+    }
+    
+    /* --- SİYAH KALAN DOSYA YÜKLEME (FILE UPLOADER) KUTUSUNU BEYAZ YAPMA --- */
+    [data-testid="stFileUploader"] section {
+        background-color: #F8FAFC !important;
+        border: 2px dashed #CBD5E1 !important;
+        border-radius: 15px !important;
+        color: #0F172A !important;
+    }
+    
+    /* Dosya yükleme kutusunun içindeki küçük yazılar */
+    [data-testid="stFileUploader"] section div, [data-testid="stFileUploader"] p {
+        color: #475569 !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. GİRİŞ KONTROLÜ (DÖNGÜSÜ DÜZELTİLMİŞ ŞİFRE KORUMASI)
+# 3. GİRİŞ KONTROLÜ (ŞİFRE KORUMASI)
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
@@ -108,7 +124,6 @@ def check_password():
         
         password = st.text_input("Şifre", type="password", label_visibility="collapsed")
         if st.button("Sistem Girişi", use_container_width=True):
-            # Şifreyi Streamlit Secrets'taki APP_PASSWORD alanından doğrular
             if password == st.secrets["APP_PASSWORD"]:
                 st.session_state["authenticated"] = True
                 st.rerun()
@@ -116,7 +131,6 @@ def check_password():
                 st.error("❌ Hatalı şifre girdiniz!")
     return False
 
-# Eğer şifre doğru girilmediyse kodun kalanını çalıştırma, burada durdur
 if not check_password():
     st.stop()
 
@@ -176,3 +190,4 @@ with chat_col:
                     st.session_state.messages.append({"role": "assistant", "content": answer})
                 except Exception as e:
                     st.error(f"Bir hata oluştu: {e}")
+                    
