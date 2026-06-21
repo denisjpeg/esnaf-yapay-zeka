@@ -3,36 +3,45 @@ import openai
 import requests
 from streamlit_lottie import st_lottie
 import sqlite3
+import os
 
 # 1. SAYFA AYARLARI
 st.set_page_config(page_title="N-Tech Analytics", page_icon="🏗️", layout="wide")
 
-# ESKİ CHAT_HISTORY.DB DOSYASINI ZORLA SİLME KODU (GEÇİCİ)
-if os.path.exists(DB_FILE):
-    os.remove(DB_FILE)
-
 # VERİTABANI BAĞLANTISI VE TABLO OLUŞTURMA
 DB_FILE = "chat_history.db"
+
+# [GEÇİCİ KOD] Eski hatalı veritabanı sütun yapısını sıfırlamak için otomatik silici
+# Sistem bir kez açıldıktan sonra istersen bu 2 satırı silebilirsin, şu an hatayı çözmesi için ekli.
+if os.path.exists(DB_FILE) and "db_reset_done" not in st.session_state:
+    try:
+        os.remove(DB_FILE)
+        st.session_state["db_reset_done"] = True
+    except Exception:
+        pass
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # Threads tablosu
+    # Threads tablosu (Sohbet Odaları)
     c.execute('''CREATE TABLE IF NOT EXISTS threads 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT)''')
-    # Messages tablosu
+    # Messages tablosu (Odalara ait mesajlar)
     c.execute('''CREATE TABLE IF NOT EXISTS messages 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, thread_id INTEGER, role TEXT, content TEXT)''')
     conn.commit()
     conn.close()
 
 def get_all_threads():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT id, title FROM threads ORDER BY id DESC")
-    rows = c.fetchall()
-    conn.close()
-    return rows
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT id, title FROM threads ORDER BY id DESC")
+        rows = c.fetchall()
+        conn.close()
+        return rows
+    except Exception:
+        return []
 
 def create_new_thread():
     conn = sqlite3.connect(DB_FILE)
@@ -59,12 +68,15 @@ def is_thread_empty(thread_id):
     return count == 0
 
 def load_messages_from_db(thread_id):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT role, content FROM messages WHERE thread_id = ? ORDER BY id ASC", (thread_id,))
-    rows = c.fetchall()
-    conn.close()
-    return [{"role": row[0], "content": row[1]} for row in rows]
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT role, content FROM messages WHERE thread_id = ? ORDER BY id ASC", (thread_id,))
+        rows = c.fetchall()
+        conn.close()
+        return [{"role": row[0], "content": row[1]} for row in rows]
+    except Exception:
+        return []
 
 def save_message_to_db(thread_id, role, content):
     conn = sqlite3.connect(DB_FILE)
@@ -81,15 +93,18 @@ def delete_thread(thread_id):
     conn.commit()
     conn.close()
 
-# Veritabanını ilklendir
+# Veritabanını başlat
 init_db()
 
-# LOTTIE FONKSİYONLARI
+# LOTTIE ANIMASYONLARI
 @st.cache_data
 def load_lottie_url(url: str):
-    r = requests.get(url)
-    if r.status_code != 200: return None
-    return r.json()
+    try:
+        r = requests.get(url)
+        if r.status_code != 200: return None
+        return r.json()
+    except Exception:
+        return None
 
 lottie_lock = load_lottie_url("https://lottie.host/80489953-d083-49fb-8778-dbe3bc04b3cf/7Xb7aT7Eof.json")
 lottie_loading = load_lottie_url("https://lottie.host/d1c071d0-b2cc-4592-80ea-379659a85966/MshA8mUHe9.json")
@@ -117,7 +132,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# AKTİF SOHBET KONTROLÜ
+# AKTİF SOHBET ODASI KONTROLÜ
 threads = get_all_threads()
 if not threads:
     default_id = create_new_thread()
@@ -127,15 +142,16 @@ if not threads:
 if "active_thread_id" not in st.session_state:
     st.session_state["active_thread_id"] = threads[0][0]
 
-# OpenAI API İstemcisi
+# OpenAI Client Tanımlaması
 if "client" not in st.session_state:
     st.session_state.client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# ANA PANEL
+# ANA PANEL ARAYÜZÜ
 st.markdown("<h1 style='text-align: center; margin-bottom: 20px;'>🏗️ N-Tech Analytics Kontrol Paneli</h1>", unsafe_allow_html=True)
 
 sidebar_col, chat_col = st.columns([1, 2], gap="large")
 
+# SOL MENÜ (SIDEBAR SEKTÖRÜ)
 with sidebar_col:
     st.markdown("### 💬 Sohbet Odaları")
     
@@ -146,7 +162,7 @@ with sidebar_col:
     
     st.markdown("---")
     
-    # Odaların Listelenmesi
+    # Odaları Listeleme
     for t_id, t_title in threads:
         is_active = t_id == st.session_state["active_thread_id"]
         button_label = f"💬 {t_title}" if is_active else f"📁 {t_title}"
@@ -173,31 +189,32 @@ with sidebar_col:
     if uploaded_file:
         st.success(f"📁 {uploaded_file.name} yüklendi.")
 
-# SAĞ TARAF - DEĞİŞKEN BAŞLIKLI SOHBET EKRANI
+# SAĞ TARAF (SOHBET EKRANI)
 with chat_col:
     current_thread_id = st.session_state["active_thread_id"]
     current_messages = load_messages_from_db(current_thread_id)
     
-    # Odanın ismini güncel başlığa göre ekrana bas
     active_title = [t[1] for t in threads if t[0] == current_thread_id]
     display_title = active_title[0] if active_title else "Sohbet"
     st.markdown(f"### 📊 Proje Alanı: {display_title}")
     
+    # Eski mesajları ekrana dök
     for msg in current_messages:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
             
+    # Yeni mesaj alma alanı
     if user_input := st.chat_input("İşletmeniz hakkında bir soru sorun..."):
         with st.chat_message("user"):
             st.write(user_input)
         
-        # Eğer bu odadaki İLK mesajsa, arka planda başlık üretelim
+        # İlk mesaj kontrolü (Başlık üretimi için)
         is_first_msg = is_thread_empty(current_thread_id)
         
         save_message_to_db(current_thread_id, "user", user_input)
         history_for_api = load_messages_from_db(current_thread_id)
         
-        # 1. YAPAY ZEKA BAŞLIĞI OLUŞTURMA (Sadece ilk mesajda tetiklenir)
+        # 1. YAPAY ZEKA TABANLI DİNAMİK BAŞLIK ATMA (Sadece ilk mesajda)
         if is_first_msg:
             try:
                 title_response = st.session_state.client.chat.completions.create(
@@ -211,16 +228,16 @@ with chat_col:
                 generated_title = title_response.choices[0].message.content.strip()
                 update_thread_title(current_thread_id, generated_title)
             except Exception:
-                pass # Başlık üretilemezse eski isim kalır, sistem kilitlenmez
+                pass
 
-        # 2. ANA CEVAP ÜRETME SÜRECİ
+        # 2. ANA YANIT SÜRECİ
         with st.chat_message("assistant"):
             with st.spinner(""):
                 if lottie_loading: st_lottie(lottie_loading, height=80, key="loading_chat")
                 try:
                     response = st.session_state.client.chat.completions.create(
                         model="gpt-4o-mini",
-                        messages=[{"role": "system", "content": "Sen endüstriyel vinç kiralama ve ağır sanayi lojistiği alanında uzman bir SaaS yapay zeka analistisin. İsmin N-Tech Analytics."}, *history_for_api]
+                        messages=[{"role": "system", "content": "Sen endüstriyel vinç kiralama ve ağır sanayi lojistiği alanında uzman bir SaaS yapay zeka analistisin. İsmin N-Tech Analytics. Profesyonel, kibar ve net cevaplar ver."}, *history_for_api]
                     )
                     answer = response.choices[0].message.content
                     st.write(answer)
