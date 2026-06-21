@@ -13,12 +13,6 @@ DB_FILE = "chat_history.db"
 
 # [GEÇİCİ KOD] Eski hatalı veritabanı sütun yapısını sıfırlamak için otomatik silici
 # Sistem bir kez açıldıktan sonra istersen bu 2 satırı silebilirsin, şu an hatayı çözmesi için ekli.
-if os.path.exists(DB_FILE) and "db_reset_done" not in st.session_state:
-    try:
-        os.remove(DB_FILE)
-        st.session_state["db_reset_done"] = True
-    except Exception:
-        pass
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
