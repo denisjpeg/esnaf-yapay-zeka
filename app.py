@@ -7,6 +7,10 @@ import sqlite3
 # 1. SAYFA AYARLARI
 st.set_page_config(page_title="N-Tech Analytics", page_icon="🏗️", layout="wide")
 
+# ESKİ CHAT_HISTORY.DB DOSYASINI ZORLA SİLME KODU (GEÇİCİ)
+if os.path.exists(DB_FILE):
+    os.remove(DB_FILE)
+
 # VERİTABANI BAĞLANTISI VE TABLO OLUŞTURMA
 DB_FILE = "chat_history.db"
 
